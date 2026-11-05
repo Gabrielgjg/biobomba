@@ -1,6 +1,6 @@
-// Bio-Bomba Clásica: funciona sin internet una vez abierta la primera vez.
+// Bio-Bomba: funciona sin internet una vez abierta la primera vez.
 // Si cambias index.html, sube el número de versión para que todos reciban la actualización.
-const CACHE = 'bbclasica-v5';
+const CACHE = 'biobomba-v4';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

@@ -1,22 +1,22 @@
-# Bio-Bomba: Edición Clásica
+# Bio-Bomba: Desactivación Celular
 
-Bomba estilo Keep Talking and Nobody Explodes: se gira para ver sus lados (número de serie, baterías, indicadores y puertos) y tiene 8 tipos de módulo más uno de vigilancia. El manual es siempre el mismo.
+App web de Biología 1° inspirada en Keep Talking and Nobody Explodes.
 
 ## Archivos
-- `index.html` — la app completa (bomba, manual, historial y registro).
-- `manifest.json`, `sw.js`, `icon-192.png`, `icon-512.png` — para instalarla y usarla sin internet.
+- `index.html` — la app completa (bomba, manual, historial, registro).
+- `manifest.json`, `sw.js`, `icon-192.png`, `icon-512.png` — hacen que se pueda instalar y que funcione sin internet.
 
 ## Publicar en GitHub Pages
-1. En tu repositorio `gabrielgjg.github.io`, presiona Add file > Upload files.
-2. Arrastra la carpeta `bomba-clasica` completa y presiona Commit changes.
-3. Abre `https://gabrielgjg.github.io/bomba-clasica/`.
+1. En tu repositorio `gabrielgjg.github.io` crea la carpeta `biobomba`.
+2. Sube ahí los 5 archivos (sin meterlos en otra subcarpeta).
+3. Abre `https://gabrielgjg.github.io/biobomba/`.
 
-## Registro en tu hoja única
-Si esta computadora ya tiene guardada la URL de Bio-Bomba, la toma sola. Si no, pégala en «Registro en Google Sheets». Las rondas se guardan en la pestaña «BioBombaClasica», que se crea sola.
+## Conectar a tu registro único de juegos
+1. En la app, abre «Registro en Google Sheets».
+2. Pega la URL /exec de tu registro único (la misma de tus otros juegos) y presiona «Guardar URL».
+3. Al terminar la primera ronda se crea sola la pestaña «BioBomba».
 
-## Controles
-- Flechas izquierda y derecha, o los botones ◀ ▶: girar la bomba.
-- P: pausa.
+Si quieres que la URL venga puesta en cualquier computadora, pégala en `CONFIG.urlAppsScript` al inicio del código de `index.html`.
 
-## Actualizar
-Si cambias `index.html`, cambia también `bbclasica-v5` por `bbclasica-v2` en `sw.js`.
+## Actualizar la app
+Si cambias `index.html`, cambia también el número de versión (`biobomba-v4`, `v3`…) en `sw.js` para que las computadoras descarguen la versión nueva.
