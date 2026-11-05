@@ -85,12 +85,14 @@ th{color:var(--muted);font-weight:700}
 .empty{color:var(--muted)}
 
 /* ---------- La bomba (caja 3D que se gira) ---------- */
-#game{min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
+#game{height:100vh;height:100dvh;display:flex;flex-direction:column;background:var(--bg)}
 .bar{position:relative;z-index:30;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px}
 .bar button{background:var(--surface);color:var(--text);border:2px solid var(--border);border-radius:10px;padding:8px 14px;font-weight:700}
 .bar .view{font-family:"Chakra Petch",sans-serif;font-weight:700;min-width:9em;text-align:center}
-.stagewrap{position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;padding:6px}
-#stage{position:relative}
+.stagewrap{position:relative;z-index:1;flex:1;min-height:0;display:flex;overflow:auto;-webkit-overflow-scrolling:touch;padding:6px}
+#stage{position:relative;margin:auto;flex:none}
+.bar .zoom{min-width:44px}
+.bar .zl{font-family:"Share Tech Mono",monospace;min-width:3.6em;text-align:center}
 #scaler{position:absolute;left:0;top:0;width:980px;height:560px;transform-origin:0 0}
 .scene{width:980px;height:560px;perspective:2400px}
 .box{position:relative;width:980px;height:560px;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,.7,.3,1)}
@@ -388,6 +390,7 @@ body.phone .wrap{padding:8px}
     <button id="rotL" aria-label="Girar a la izquierda">◀ Girar</button>
     <span class="view" id="viewName">Frente</span>
     <button id="rotR" aria-label="Girar a la derecha">Girar ▶</button>
+    <button id="zOut" class="zoom" aria-label="Alejar">−</button><span class="zl" id="zLabel">100 %</span><button id="zIn" class="zoom" aria-label="Acercar">+</button>
     <button id="pauseBtn">Pausa</button>
     <button id="quitBtn">Salir</button>
   </div>
@@ -589,12 +592,21 @@ function setRot(r,instant){
 }
 $('#rotL').onclick=()=>{ if(G&&!G.paused&&!G.over) setRot(G.rot-1); };
 $('#rotR').onclick=()=>{ if(G&&!G.paused&&!G.over) setRot(G.rot+1); };
+// Lupa: acerca la bomba y se recorre deslizando (útil en celular)
+const ZOOMS=[1,1.5,2,2.5,3]; let zi=0;
 function fit(){
   const bar=$('.bar').offsetHeight||56, aw=window.innerWidth-24, ah=window.innerHeight-bar-40;
-  const s=Math.max(.3,Math.min(aw/980,ah/560,1.6));
+  const s=Math.max(.3,Math.min(aw/980,ah/560,1.6))*ZOOMS[zi];
+  $('#zLabel').textContent=Math.round(ZOOMS[zi]*100)+' %';
   $('#stage').style.width=980*s+'px'; $('#stage').style.height=560*s+'px'; $('#scaler').style.transform=`scale(${s})`;
 }
 window.addEventListener('resize',()=>{ if(!$('#game').classList.contains('hidden')) fit(); });
+function setZoom(d){
+  const w=$('.stagewrap'), cx=(w.scrollLeft+w.clientWidth/2)/Math.max(1,w.scrollWidth), cy=(w.scrollTop+w.clientHeight/2)/Math.max(1,w.scrollHeight);
+  const nz=Math.max(0,Math.min(ZOOMS.length-1,zi+d)); if(nz===zi) return; zi=nz; fit();
+  w.scrollLeft=cx*w.scrollWidth-w.clientWidth/2; w.scrollTop=cy*w.scrollHeight-w.clientHeight/2;
+}
+$('#zIn').onclick=()=>setZoom(1); $('#zOut').onclick=()=>setZoom(-1);
 document.addEventListener('fullscreenchange',()=>setTimeout(()=>{ if(!$('#game').classList.contains('hidden')) fit(); },100));
 function loop(me,now){
   if(me.dead) return;
