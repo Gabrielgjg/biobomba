@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bio-Bomba: Desactivación Celular</title>
+<meta name="theme-color" content="#5a6240">
+<meta name="description" content="Juego cooperativo de Biología 1°: desactiven la bomba con el manual y lo que saben de biología.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Atkinson+Hyperlegible:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#cdd3c4; --surface:#f5f3ec; --surface-2:#e6e8de; --text:#20251c; --muted:#566050;
+  --accent:#4c5a2e; --on-accent:#ffffff; --border:#aab29e; --danger:#b3261e;
+  /* El aparato (igual en modo claro y oscuro) */
+  --case:#5a6240; --case-edge:#3c4229; --case-text:#eef0e2; --case-muted:#c9cfb4;
+  --enamel:#e8e2cf; --enamel-text:#2b2a22; --enamel-muted:#6b6650;
+  --lcd:#2a1712; --lcd-text:#ff5a36; --led-off:#6e2a22; --led-on:#ff4a2e; --led-ok:#3fbf4f;
+  --key:#f8f4e6; --key-edge:#b4ad94; --key-text:#2b2a22; --ok-bg:#3c8a46; --ok-text:#ffffff;
+  --metal:#9c9b8f; --qr-bg:#ffffff; --warn:#e8621a; --warn-text:#2b1405; --strip-off:#3b3a33;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1b1f19; --surface:#262b23; --surface-2:#30362c; --text:#e7eadf; --muted:#a7b09f;
+    --accent:#b9c98a; --on-accent:#1b1f19; --border:#3c4436; --danger:#ff8a7a;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1b1f19; --surface:#262b23; --surface-2:#30362c; --text:#e7eadf; --muted:#a7b09f;
+  --accent:#b9c98a; --on-accent:#1b1f19; --border:#3c4436; --danger:#ff8a7a;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:1.05rem;line-height:1.5}
+h1,h2,h3{font-family:"Chakra Petch","Segoe UI",system-ui,sans-serif;line-height:1.15;margin:0}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--warn);outline-offset:3px}
+.hidden{display:none!important}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 18px 48px}
+
+/* ---------- Botones de interfaz ---------- */
+.btn{border:0;border-radius:10px;padding:12px 20px;font-weight:700;background:var(--accent);color:var(--on-accent)}
+.btn.ghost{background:transparent;color:var(--text);border:2px solid var(--border)}
+.btn.big{font-size:1.25rem;padding:16px 28px}
+
+/* ---------- Pantalla de inicio ---------- */
+.intro{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:820px){.intro{grid-template-columns:1fr}}
+.title{font-size:clamp(2.6rem,7vw,4.6rem);font-weight:700;letter-spacing:-.01em}
+.title small{display:block;font-size:.36em;font-weight:500;color:var(--muted);letter-spacing:0;margin-top:6px}
+.lead{max-width:60ch;color:var(--muted);margin:16px 0 0}
+.howto{margin:18px 0 0;padding-left:1.2em;max-width:60ch}
+.howto li{margin:4px 0}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.field label,.legend{font-weight:700;font-size:.95rem}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row .field{flex:1;min-width:120px}
+input[type=text],select{font:inherit;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text)}
+.checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px 14px;margin:6px 0 14px}
+.checks label{display:flex;gap:8px;align-items:center;font-weight:400}
+.checks input{width:20px;height:20px;accent-color:var(--accent)}
+.err{color:var(--danger);font-weight:700;min-height:1.4em;margin:4px 0}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+.history{margin-top:28px}
+.history h2{font-size:1.4rem;margin-bottom:10px}
+.tscroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+th{color:var(--muted);font-weight:700}
+.win{color:var(--ok-bg);font-weight:700}
+.lose{color:var(--danger);font-weight:700}
+.empty{color:var(--muted)}
+
+/* ---------- La bomba ---------- */
+#game{padding:14px}
+.casing{max-width:1400px;margin:0 auto;background:var(--case);border:6px solid var(--case-edge);border-radius:22px;padding:16px;color:var(--case-text);
+  background-image:repeating-linear-gradient(135deg,transparent 0 18px,rgba(0,0,0,.035) 18px 36px)}
+.chassis{display:flex;flex-wrap:wrap;gap:14px;align-items:stretch;margin-bottom:16px}
+.lcdbox{background:var(--lcd);border:4px solid var(--case-edge);border-radius:12px;padding:6px 22px;display:flex;align-items:center}
+#timer{font-family:"Share Tech Mono","Courier New",monospace;font-size:clamp(3rem,8vw,5.6rem);color:var(--lcd-text);line-height:1;letter-spacing:.04em;text-shadow:0 0 14px rgba(255,90,54,.45)}
+.plaque{background:var(--enamel);color:var(--enamel-text);border-radius:10px;padding:8px 14px;display:flex;flex-direction:column;justify-content:center;border:3px solid var(--case-edge)}
+.plaque .k{font-size:.85rem;color:var(--enamel-muted);font-weight:700}
+.plaque .v{font-family:"Share Tech Mono","Courier New",monospace;font-size:clamp(1.5rem,3vw,2.2rem);letter-spacing:.12em}
+.strikes{display:flex;gap:6px}
+.strikes span{width:30px;height:30px;border-radius:50%;background:var(--led-off);display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:var(--lcd)}
+.strikes span.on{background:var(--led-on);box-shadow:0 0 12px var(--led-on)}
+.ctrl{margin-left:auto;display:flex;gap:8px;align-items:center}
+.ctrl button{background:var(--enamel);color:var(--enamel-text);border:3px solid var(--case-edge);border-radius:10px;padding:10px 16px;font-weight:700}
+.bombarea{position:relative}
+#bomb{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.mod{position:relative;background:var(--enamel);color:var(--enamel-text);border:4px solid var(--case-edge);border-radius:14px;padding:16px 16px 18px;min-height:280px}
+.mod::before,.mod::after{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:var(--metal);bottom:8px}
+.mod::before{left:8px}.mod::after{right:8px}
+.mod h3{font-size:1.25rem;margin:0 34px 12px 0}
+.mod .led{position:absolute;top:14px;right:14px;width:20px;height:20px;border-radius:50%;background:var(--led-off);border:2px solid var(--case-edge)}
+.mod.solved .led{background:var(--led-ok);box-shadow:0 0 14px var(--led-ok)}
+.mod.solved .mbody{opacity:.55;pointer-events:none}
+.mod.alert .led{background:var(--warn);box-shadow:0 0 14px var(--warn)}
+.mod.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.plate{background:var(--key);border:2px dashed var(--key-edge);border-radius:10px;padding:10px 12px;font-size:clamp(1.15rem,2vw,1.45rem);font-weight:700;text-align:center;margin-bottom:12px}
+.plate.small{font-size:1.1rem;font-weight:400}
+.plate b{font-weight:700}
+
+/* Cables */
+.wire{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;padding:6px 0;color:var(--enamel-text)}
+.wn{width:1.6em;text-align:right;font-weight:700;color:var(--enamel-muted)}
+.term{width:14px;height:24px;border-radius:3px;background:var(--metal);flex:none}
+.cable{flex:1;height:14px;border-radius:7px;background:var(--c);border:1px solid rgba(0,0,0,.35)}
+.wire.cut .cable{background:linear-gradient(90deg,var(--c) 0 44%,transparent 44% 56%,var(--c) 56%);border-color:transparent}
+.tag{background:var(--key);color:var(--key-text);border:2px solid var(--key-edge);border-radius:8px;padding:4px 10px;font-weight:700;min-width:8.5em;text-align:center;font-size:1.1rem}
+.wire:hover .cable{filter:brightness(1.12)}
+
+/* Botón */
+.btnrow{display:flex;gap:22px;align-items:center;justify-content:center}
+.bigbtn{width:150px;height:150px;border-radius:50%;border:6px solid var(--case-edge);background:radial-gradient(circle at 35% 30%,#ff8a70,var(--led-on) 55%,#a3261b);color:var(--ok-text);font-family:"Chakra Petch",system-ui,sans-serif;font-size:1.5rem;font-weight:700;touch-action:none;user-select:none;-webkit-user-select:none}
+.bigbtn:active{transform:scale(.96)}
+.strip{width:30px;height:150px;border-radius:8px;background:var(--strip-off);border:3px solid var(--case-edge)}
+.strip.lit{box-shadow:0 0 18px currentColor}
+
+/* Teclas en secuencia */
+.keys{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.key{position:relative;background:var(--key);color:var(--key-text);border:2px solid var(--key-edge);border-bottom-width:6px;border-radius:10px;padding:14px 10px;font-weight:700;font-size:1.15rem;min-height:64px}
+.key:active{border-bottom-width:2px;transform:translateY(4px)}
+.key.done{background:var(--ok-bg);color:var(--ok-text);border-color:var(--ok-bg)}
+.key.done::after{content:attr(data-n);position:absolute;top:-10px;left:-10px;width:28px;height:28px;border-radius:50%;background:var(--lcd);color:var(--lcd-text);font-family:"Share Tech Mono",monospace;display:flex;align-items:center;justify-content:center;font-size:1rem}
+
+/* Código genético */
+.dna{display:flex;gap:10px;justify-content:center;margin:4px 0 14px}
+.dna span{width:58px;height:64px;border-radius:10px;background:var(--lcd);color:var(--lcd-text);font-family:"Share Tech Mono",monospace;font-size:2.4rem;display:flex;align-items:center;justify-content:center}
+.dlabel{text-align:center;color:var(--enamel-muted);font-weight:700;margin-bottom:6px}
+.selector{display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:12px}
+.selector .arrow{width:52px;height:52px;border-radius:10px;background:var(--key);color:var(--key-text);border:2px solid var(--key-edge);font-size:1.4rem;font-weight:700}
+.selector .aa{flex:1;max-width:240px;text-align:center;background:var(--key);border:2px solid var(--key-edge);border-radius:10px;padding:12px 8px;font-weight:700;font-size:1.2rem}
+.synth{display:block;margin:0 auto;background:var(--accent);color:var(--on-accent);border:0;border-radius:10px;padding:12px 26px;font-weight:700;font-size:1.1rem}
+.stages{display:flex;gap:6px;justify-content:center;margin-top:12px}
+.stages i{width:16px;height:16px;border-radius:50%;background:var(--led-off)}
+.stages i.on{background:var(--led-ok)}
+
+/* Termostato */
+.gauge{height:22px;border-radius:11px;background:var(--strip-off);overflow:hidden;border:2px solid var(--case-edge);margin-bottom:12px}
+.gauge div{height:100%;background:var(--warn);width:0}
+.tcount{font-family:"Share Tech Mono",monospace;font-size:2rem;text-align:center;color:var(--enamel-text)}
+.tbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tbtns button{border:2px solid var(--key-edge);border-radius:10px;padding:14px;font-weight:700;font-size:1.1rem;background:var(--key);color:var(--key-text)}
+.tbtns button:disabled{opacity:.45;cursor:not-allowed}
+.idle{text-align:center;color:var(--enamel-muted);font-size:1.15rem;padding:28px 0}
+
+/* Pausa, destello y final */
+.pause{position:absolute;inset:0;background:var(--case);border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:"Chakra Petch",sans-serif;font-size:3rem;font-weight:700;color:var(--case-text);z-index:5}
+#flash{position:fixed;inset:0;background:var(--led-on);opacity:0;pointer-events:none;z-index:50;transition:opacity .35s}
+#flash.on{opacity:.45;transition:none}
+#endov{position:fixed;inset:0;z-index:60;background:rgba(10,12,9,.82);display:flex;align-items:center;justify-content:center;padding:calc(20px + env(safe-area-inset-top,0px)) 20px calc(20px + env(safe-area-inset-bottom,0px))}
+.endcard{background:var(--surface);color:var(--text);border-radius:18px;padding:28px;max-width:560px;width:100%;text-align:center;border:4px solid var(--border)}
+.endcard h2{font-size:clamp(2rem,6vw,3rem);margin-bottom:10px}
+.endcard p{margin:6px 0;color:var(--muted)}
+.endcard .actions{justify-content:center;margin-top:18px}
+
+/* ---------- Manual ---------- */
+.mtools{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.mtools label{display:flex;gap:8px;align-items:center}
+.mtools input{width:20px;height:20px;accent-color:var(--accent)}
+.manual{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:900px;margin:0 auto}
+.manual h1{font-size:2.2rem;margin-bottom:4px}
+.manual h2{font-size:1.5rem;margin:28px 0 8px;padding-top:14px;border-top:2px solid var(--border)}
+.manual h3{font-size:1.1rem;margin:16px 0 6px}
+.manual p,.manual li{max-width:72ch}
+.manual ul,.manual ol{padding-left:1.3em}
+.manual table{margin:6px 0 12px}
+.manual td,.manual th{white-space:normal}
+.guia{background:var(--surface-2);border-left:5px solid var(--accent);border-radius:8px;padding:10px 14px;margin:10px 0}
+.guia .gt{font-weight:700;margin-bottom:4px}
+.manual.noguia .guia{display:none}
+.mono{font-family:"Share Tech Mono","Courier New",monospace}
+
+details.cfg{margin-top:16px;border-top:1px solid var(--border);padding-top:12px}
+details.cfg summary{font-weight:700;cursor:pointer}
+.status{font-size:.95rem;color:var(--muted);margin:8px 0}
+.qrbox{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start;margin-top:12px}
+.qr{background:var(--qr-bg);padding:10px;border-radius:10px;display:inline-block;min-width:180px;min-height:180px;word-break:break-all;font-size:.8rem;color:#000}
+.qrcap{font-size:.95rem;color:var(--muted);text-align:center;margin-top:6px;max-width:180px}
+body.phone .mtools{display:none}
+body.phone .manual{border:0;padding:8px 2px}
+/* Proyectores de poca altura (1366×768, 1280×720): que quepa toda la bomba */
+@media (min-width:900px) and (max-height:860px){
+  #game{padding:2px}
+  .casing{padding:10px;border-width:5px}
+  .chassis{margin-bottom:10px;gap:10px}
+  #timer{font-size:3.6rem}
+  .plaque .v{font-size:1.6rem}
+  #bomb{gap:10px}
+  .mod{min-height:0;padding:10px 12px 14px}
+  .mod h3{font-size:1.1rem;margin-bottom:8px}
+  .plate{padding:6px 10px;margin-bottom:8px;font-size:1.15rem}
+  .wire{padding:3px 0}
+  .key{padding:8px;min-height:48px;font-size:1.05rem}
+  .keys{gap:8px}
+  .bigbtn{width:112px;height:112px;font-size:1.25rem}
+  .strip{height:112px}
+  .dna{margin-bottom:8px}.dna span{height:52px;width:50px;font-size:2rem}
+  .selector{margin-bottom:8px}.selector .arrow{width:44px;height:44px}.selector .aa{padding:8px}
+  .synth{padding:9px 22px}
+  .idle{padding:14px 0}
+}
+@media (prefers-reduced-motion: reduce){.mod.shake{animation:none}#flash{transition:none}}
+@media print{
+  :root{--surface:#fff;--surface-2:#f1f1f1;--text:#000;--muted:#333;--border:#999;--accent:#333;padding:0}
+  body{background:#fff;color:#000;font-size:11pt}
+  .no-print,#setup,#game,#endov,#flash{display:none!important}
+  #manualScreen{display:block!important}
+  .wrap{padding:0;max-width:none}
+  .manual{border:0;padding:0;max-width:none}
+  .manual h2{break-after:avoid}
+  .modsec{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= INICIO ================= -->
+<main id="setup" class="wrap">
+  <div class="intro">
+    <div>
+      <h1 class="title">Bio-Bomba<small>Desactivación celular · Biología 1°</small></h1>
+      <p class="lead">Un integrante ve la bomba en el proyector; el resto del equipo tiene el manual impreso. Nadie puede resolverla solo: hay que describir, escuchar y aplicar lo que saben de biología antes de que el reloj llegue a cero.</p>
+      <ol class="howto">
+        <li>Imprime el manual (uno por equipo).</li>
+        <li>El desactivador se sienta frente a la compu, de espaldas al equipo.</li>
+        <li>Los expertos leen el manual sin ver la pantalla.</li>
+        <li>Cambien de desactivador en cada ronda.</li>
+      </ol>
+    </div>
+    <div class="panel">
+      <div class="row">
+        <div class="field"><label for="team">Equipo</label><input id="team" type="text" placeholder="Ej. Los Ajolotes" maxlength="40"></div>
+        <div class="field"><label for="grupo">Grupo</label>
+          <select id="grupo"><option>1° A</option><option>1° B</option><option>1° C</option><option>1° D</option><option>1° E</option><option>1° F</option></select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="mins">Tiempo</label>
+          <select id="mins"><option value="3">3 min</option><option value="4">4 min</option><option value="5" selected>5 min</option><option value="6">6 min</option><option value="8">8 min</option></select></div>
+        <div class="field"><label for="errs">Errores permitidos</label>
+          <select id="errs"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div>
+      </div>
+      <div class="field"><label for="secu">Secundaria</label><input id="secu" type="text" value="Secundaria 39" maxlength="60"></div>
+      <div class="legend">Módulos de la bomba</div>
+      <div class="checks" id="modchecks"></div>
+      <div class="checks"><label><input type="checkbox" id="sound" checked> Sonido</label><label><input type="checkbox" id="fs" checked> Pantalla completa al jugar</label></div>
+      <div class="err" id="setupErr" role="alert"></div>
+      <div class="actions">
+        <button class="btn big" id="startBtn">Armar la bomba</button>
+        <button class="btn ghost" id="manualBtn">Ver e imprimir manual</button>
+      </div>
+      <details class="cfg">
+        <summary>Registro en Google Sheets</summary>
+        <div class="field"><label for="gsUrl">URL /exec de tu registro único de juegos</label>
+          <input id="gsUrl" type="text" placeholder="https://script.google.com/macros/s/…/exec"></div>
+        <p class="status" id="gsStatus"></p>
+        <div class="actions"><button class="btn ghost" id="gsSave">Guardar URL</button><button class="btn ghost" id="gsRetry">Reenviar pendientes</button></div>
+      </details>
+    </div>
+  </div>
+
+  <section class="history">
+    <h2>Manual en el celular</h2>
+    <p class="lead">Los expertos pueden escanear un código para abrir el manual en su celular en lugar de imprimirlo. El manual en celular no tiene casilla para cambiar las guías, así que el modo que elijas aquí es el que verán.</p>
+    <div class="qrbox">
+      <div><div class="qr" id="qr1"></div><div class="qrcap">Con guías de repaso</div></div>
+      <div><div class="qr" id="qr2"></div><div class="qrcap">Sin guías (evaluación)</div></div>
+    </div>
+  </section>
+
+  <section class="history">
+    <h2>Rondas jugadas</h2>
+    <div class="tscroll" id="histTable"></div>
+    <div class="actions"><button class="btn ghost" id="clearHist">Borrar historial</button></div>
+  </section>
+</main>
+
+<!-- ================= JUEGO ================= -->
+<div id="game" class="hidden">
+  <div class="casing">
+    <div class="chassis">
+      <div class="lcdbox"><div id="timer" aria-live="off">5:00</div></div>
+      <div class="plaque"><span class="k">Número de serie</span><span class="v" id="serial">—</span></div>
+      <div class="plaque"><span class="k">Cultivos</span><span class="v" id="cultivos">—</span></div>
+      <div class="plaque"><span class="k">Errores</span><div class="strikes" id="strikes"></div></div>
+      <div class="ctrl">
+        <button id="pauseBtn">Pausa</button>
+        <button id="quitBtn">Salir</button>
+      </div>
+    </div>
+    <div class="bombarea">
+      <div id="bomb"></div>
+      <div class="pause hidden" id="pauseOv">En pausa</div>
+    </div>
+  </div>
+</div>
+<div id="flash"></div>
+<div id="endov" class="hidden">
+  <div class="endcard">
+    <h2 id="endTitle"></h2>
+    <p id="endMsg"></p>
+    <p id="endStats"></p>
+    <div class="actions">
+      <button class="btn big" id="againBtn">Otra ronda</button>
+      <button class="btn ghost" id="menuBtn">Menú</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MANUAL ================= -->
+<div id="manualScreen" class="wrap hidden">
+  <div class="mtools no-print">
+    <button class="btn" onclick="window.print()">Imprimir manual</button>
+    <button class="btn ghost" id="backBtn">Volver</button>
+    <label><input type="checkbox" id="guiaChk" checked> Incluir guías de contenido (repaso)</label>
+  </div>
+  <article class="manual" id="manual"></article>
+</div>
+
+<script>
+/* ================= CONFIGURACIÓN ================= */
+// Opcional: pega aquí la URL /exec de tu registro único para que venga puesta en todas las computadoras.
+const CONFIG={urlAppsScript:''};
+
+/* ================= DATOS ================= */
+const ORGS={
+  productor:['Nopal','Maíz','Alga','Pasto','Mezquite','Fitoplancton','Encino'],
+  herbivoro:['Conejo','Venado','Chapulín','Zooplancton','Ratón','Oruga'],
+  carnivoro:['Serpiente','Coyote','Águila','Jaguar','Lechuza','Halcón'],
+  descomponedor:['Hongo','Bacteria','Moho']
+};
+const WIRE_COLORS=['#d93025','#1e6fd9','#f2c200','#f4f4f4','#222222','#2e9d4a'];
+const VIDA_SI=['Se nutre','Respira','Se reproduce','Responde a estímulos','Crece y se desarrolla','Está formado por células','Mantiene su equilibrio interno','Se adapta a su ambiente','Elimina desechos'];
+const VIDA_NO=['Es de color verde','Se mueve con el viento','Brilla con la luz','Está hecho de metal','Pesa más de un kilo','Tiene forma redonda','Hace ruido','Se derrite con el calor'];
+const STRIPS={azul:{hex:'#2f7cf6',d:4},amarillo:{hex:'#f5c518',d:5},blanco:{hex:'#f4f4f4',d:1},rojo:{hex:'#e53935',d:1}};
+const ECOS=[
+  {n:'Bosque de pino-encino',c:['Encino','Ardilla','Víbora de cascabel','Águila real']},
+  {n:'Desierto sonorense',c:['Biznaga','Chapulín','Lagartija','Correcaminos']},
+  {n:'Selva tropical',c:['Ceiba','Oruga','Rana','Boa']},
+  {n:'Manglar',c:['Mangle rojo','Cangrejo','Mapache','Cocodrilo']},
+  {n:'Mar abierto',c:['Fitoplancton','Zooplancton','Sardina','Tiburón']},
+  {n:'Lago de Xochimilco',c:['Alga','Pulga de agua','Ajolote','Garza blanca']}
+];
+const DESC=['Hongo','Bacteria','Moho','Champiñón'];
+const RAMAS=[
+  {r:'Botánica',o:'Las plantas'},{r:'Zoología',o:'Los animales'},{r:'Micología',o:'Los hongos'},
+  {r:'Microbiología',o:'Los microorganismos'},{r:'Genética',o:'La herencia'},
+  {r:'Ecología',o:'Los seres vivos y su ambiente'},{r:'Citología',o:'Las células'},
+  {r:'Anatomía',o:'La estructura del cuerpo'},{r:'Fisiología',o:'El funcionamiento del cuerpo'},
+  {r:'Entomología',o:'Los insectos'},{r:'Ictiología',o:'Los peces'},{r:'Ornitología',o:'Las aves'},
+  {r:'Herpetología',o:'Los reptiles y anfibios'},{r:'Paleontología',o:'Los fósiles'},
+  {r:'Embriología',o:'El desarrollo del embrión'},{r:'Taxonomía',o:'La clasificación'}
+];
+const CODONES={AUG:'Metionina',UUU:'Fenilalanina',GGC:'Glicina',GCA:'Alanina',UGG:'Triptófano',CAU:'Histidina',AAA:'Lisina',GAA:'Ácido glutámico',UCU:'Serina',CCC:'Prolina',UAC:'Tirosina',GUU:'Valina'};
+const ARN_A_MOLDE={A:'T',U:'A',G:'C',C:'G'};
+const REDUCE=['Ir a la escuela en bicicleta','Plantar árboles','Apagar las luces que no se usan','Usar paneles solares','Usar transporte público','Hacer composta','Reciclar y reutilizar','Comer menos carne'];
+const AUMENTA=['Quemar basura','Talar bosques','Dejar luces encendidas todo el día','Usar el auto para trayectos cortos','Quemar pastizales','Tirar comida a la basura','Usar plásticos desechables'];
+
+const MODS={
+  cables:{name:'Cables tróficos',icon:'🔌',build:buildCables},
+  boton:{name:'El botón de la vida',icon:'🔴',build:buildBoton},
+  flujo:{name:'Flujo de energía',icon:'⚡',build:buildFlujo},
+  ramas:{name:'Ramas de la biología',icon:'🔬',build:buildRamas},
+  codigo:{name:'Código genético',icon:'🧬',build:buildCodigo},
+  termostato:{name:'Termostato',icon:'🌡️',needy:true,build:buildTermo}
+};
+
+/* ================= UTILIDADES ================= */
+const $=s=>document.querySelector(s);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const rint=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+
+/* ================= SONIDO ================= */
+let AC=null;
+function initAudio(){ if(!$('#sound').checked){AC=null;return;} try{AC=AC||new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended')AC.resume();}catch(e){AC=null;} }
+function tone(f,d,type='square',v=.05,when=0){ if(!AC||!$('#sound').checked)return; try{const t=AC.currentTime+when,o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d+.02);}catch(e){} }
+const sTick=hi=>tone(hi?1500:1100,.03,'square',.025);
+const sBuzz=()=>{tone(110,.45,'sawtooth',.12);tone(90,.45,'sawtooth',.1,.05);};
+const sOk=()=>{tone(660,.12,'triangle',.08);tone(990,.18,'triangle',.08,.1);};
+const sClick=()=>tone(800,.05,'triangle',.06);
+const sSnip=()=>tone(2400,.04,'square',.04);
+const sWarn=()=>{tone(880,.15,'square',.05);tone(880,.15,'square',.05,.25);};
+function sBoom(){ if(!AC||!$('#sound').checked)return; try{const len=Math.floor(AC.sampleRate*1.4),buf=AC.createBuffer(1,len,AC.sampleRate),d=buf.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.4);const s=AC.createBufferSource();s.buffer=buf;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=800;const g=AC.createGain();g.gain.value=.7;s.connect(f).connect(g).connect(AC.destination);s.start();}catch(e){} }
+const sWin=()=>[523,659,784,1047].forEach((f,i)=>tone(f,.25,'triangle',.08,i*.12));
+
+/* ================= INICIO ================= */
+const cfgSaved=load('biobomba-cfg',null);
+$('#modchecks').innerHTML=Object.entries(MODS).map(([k,m])=>`<label><input type="checkbox" value="${k}" ${cfgSaved&&cfgSaved.mods&&!cfgSaved.mods.includes(k)?'':'checked'}> ${m.icon} ${m.name}${m.needy?' (vigilancia)':''}</label>`).join('');
+if(cfgSaved){ if(cfgSaved.mins)$('#mins').value=cfgSaved.mins; if(cfgSaved.errs)$('#errs').value=cfgSaved.errs; if(cfgSaved.grupo)$('#grupo').value=cfgSaved.grupo; if(cfgSaved.sound===false)$('#sound').checked=false; if(cfgSaved.fs===false)$('#fs').checked=false; if(cfgSaved.secu)$('#secu').value=cfgSaved.secu; }
+
+function readCfg(){
+  return {team:$('#team').value.trim()||'Equipo sin nombre',grupo:$('#grupo').value,mins:+$('#mins').value,errs:+$('#errs').value,
+    mods:[...document.querySelectorAll('#modchecks input:checked')].map(i=>i.value),sound:$('#sound').checked,fs:$('#fs').checked,secu:$('#secu').value.trim()||'Sin secundaria'};
+}
+function show(id){ ['setup','game','manualScreen'].forEach(s=>$('#'+s).classList.toggle('hidden',s!==id)); window.scrollTo(0,0); }
+
+$('#startBtn').onclick=()=>{
+  const cfg=readCfg();
+  if(!cfg.mods.some(k=>!MODS[k].needy)){ $('#setupErr').textContent='Elige al menos un módulo además del Termostato.'; return; }
+  $('#setupErr').textContent=''; store('biobomba-cfg',cfg); initAudio(); if(cfg.fs) goFull(); wake(true); startGame(cfg);
+};
+$('#manualBtn').onclick=()=>{ renderManual(); show('manualScreen'); };
+$('#backBtn').onclick=()=>show('setup');
+$('#guiaChk').onchange=e=>$('#manual').classList.toggle('noguia',!e.target.checked);
+$('#clearHist').onclick=()=>{ if(confirm('¿Borrar todas las rondas guardadas?')){ store('biobomba-hist',[]); renderHist(); } };
+
+function renderHist(){
+  const h=load('biobomba-hist',[]);
+  if(!h.length){ $('#histTable').innerHTML='<p class="empty">Aún no hay rondas. Arma la primera bomba para empezar el registro.</p>'; return; }
+  $('#histTable').innerHTML=`<table><thead><tr><th>Fecha</th><th>Grupo</th><th>Equipo</th><th>Resultado</th><th>Tiempo restante</th><th>Errores</th><th>Módulos</th></tr></thead><tbody>${
+    h.slice().reverse().map(r=>`<tr><td>${esc(r.fecha)}</td><td>${esc(r.grupo)}</td><td>${esc(r.team)}</td><td class="${r.win?'win':'lose'}">${r.win?'Desactivada':'Explotó'}</td><td class="mono">${esc(r.restante)}</td><td>${r.errores}</td><td>${r.modulos}</td></tr>`).join('')}</tbody></table>`;
+}
+renderHist();
+
+/* ================= JUEGO ================= */
+let G=null;
+function makeSerial(){
+  const L='ABCDEFGHJKLMNPRSTUVWXZ',D='23456789'; let s=''; // sin I, O, 0 ni 1 para que no se confundan
+  for(let i=0;i<5;i++) s+=Math.random()<.6?pick(L):pick(D);
+  return s+pick(D);
+}
+function timerStr(){ const t=Math.max(0,Math.ceil(G.time)); return Math.floor(t/60)+':'+String(t%60).padStart(2,'0'); }
+const live=()=>G&&!G.over&&!G.paused;
+
+function startGame(cfg){
+  if(G) G.dead=true;
+  const serial=makeSerial();
+  G={cfg,serial,odd:(+serial.slice(-1))%2===1,vowel:/[AEIOU]/.test(serial),cultivos:rint(0,3),
+     time:cfg.mins*60,strikes:0,max:cfg.errs,mods:[],over:false,paused:false,dead:false,last:performance.now(),lastStr:''};
+  $('#serial').textContent=serial;
+  $('#cultivos').textContent=G.cultivos?'🧫'.repeat(G.cultivos):'0';
+  renderStrikes();
+  $('#bomb').innerHTML=''; $('#pauseOv').classList.add('hidden'); $('#pauseBtn').textContent='Pausa';
+  $('#endov').classList.add('hidden');
+  const order=shuffle(cfg.mods.filter(k=>!MODS[k].needy));
+  if(cfg.mods.includes('termostato')) order.push('termostato');
+  order.forEach(k=>{
+    const def=MODS[k],el=document.createElement('section');
+    el.className='mod';
+    el.innerHTML=`<div class="led" aria-hidden="true"></div><h3><span aria-hidden="true">${def.icon}</span> ${def.name}</h3><div class="mbody"></div>`;
+    $('#bomb').appendChild(el);
+    const m={key:k,def,el,body:el.querySelector('.mbody'),solved:false,needy:!!def.needy};
+    G.mods.push(m); def.build(m);
+  });
+  $('#timer').textContent=timerStr();
+  show('game');
+  const me=G; requestAnimationFrame(t=>{me.last=t;loop(me,t);});
+}
+function loop(me,now){
+  if(me.dead) return;
+  const dt=Math.min(.25,(now-me.last)/1000); me.last=now;
+  if(!me.over&&!me.paused){
+    me.time-=dt*(1+.25*me.strikes);
+    me.mods.forEach(m=>m.tick&&m.tick(dt));
+    if(me.time<=0){ me.time=0; endGame(false,'Se acabó el tiempo.'); }
+    const s=timerStr();
+    if(s!==me.lastStr){ me.lastStr=s; $('#timer').textContent=s; if(!me.over) sTick(me.time<30); }
+  }
+  requestAnimationFrame(t=>loop(me,t));
+}
+function renderStrikes(){ $('#strikes').innerHTML=Array.from({length:G.max},(_,i)=>`<span class="${i<G.strikes?'on':''}">${i<G.strikes?'✕':''}</span>`).join(''); }
+function strike(m){
+  if(!live()) return;
+  G.strikes++; renderStrikes(); sBuzz();
+  const f=$('#flash'); f.classList.add('on'); setTimeout(()=>f.classList.remove('on'),60);
+  if(m){ m.el.classList.remove('shake'); void m.el.offsetWidth; m.el.classList.add('shake'); }
+  if(G.strikes>=G.max) endGame(false,'Demasiados errores.');
+}
+function solve(m){
+  m.solved=true; m.el.classList.add('solved'); sOk();
+  if(G.mods.filter(x=>!x.needy).every(x=>x.solved)) endGame(true);
+}
+function endGame(win,why){
+  if(G.over) return; G.over=true;
+  const restante=timerStr(),reg=G.mods.filter(x=>!x.needy);
+  if(win) sWin(); else sBoom();
+  $('#endTitle').textContent=win?'✅ Bomba desactivada':'💥 ¡BOOM!';
+  $('#endMsg').textContent=win?`${G.cfg.team} desactivó la bomba.`:`${why} ${reg.filter(x=>x.solved).length} de ${reg.length} módulos resueltos.`;
+  $('#endStats').textContent=`Tiempo restante: ${restante} · Errores: ${G.strikes} de ${G.max}`;
+  const h=load('biobomba-hist',[]);
+  const d=new Date();
+  h.push({fecha:d.toLocaleDateString('es-MX')+' '+d.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'}),grupo:G.cfg.grupo,team:G.cfg.team,win,restante:win?restante:'0:00',errores:G.strikes,modulos:`${reg.filter(x=>x.solved).length}/${reg.length}`});
+  store('biobomba-hist',h.slice(-300));
+  registrar({juego:'BioBomba',version:'1.0',idEnvio:Date.now().toString(36)+Math.random().toString(36).slice(2,7),
+    nombre:G.cfg.team,secundaria:G.cfg.secu,grupo:G.cfg.grupo,resultado:win?'Desactivada':'Explotó',
+    segundosRestantes:win?Math.ceil(G.time):0,minutosRonda:G.cfg.mins,errores:G.strikes,erroresPermitidos:G.max,
+    modulosResueltos:reg.filter(x=>x.solved).length,modulosTotales:reg.length,modulos:reg.map(x=>x.def.name).join(' | '),
+    termostato:G.cfg.mods.includes('termostato')?'Sí':'No',numeroSerie:G.serial});
+  setTimeout(()=>$('#endov').classList.remove('hidden'),win?400:900);
+}
+$('#pauseBtn').onclick=()=>{ if(!G||G.over)return; G.paused=!G.paused; $('#pauseOv').classList.toggle('hidden',!G.paused); $('#pauseBtn').textContent=G.paused?'Continuar':'Pausa'; };
+$('#quitBtn').onclick=()=>{ if(G&&!G.over&&!confirm('¿Salir sin terminar? Esta ronda no se guardará.'))return; if(G)G.dead=true; wake(false); exitFull(); renderHist(); show('setup'); };
+$('#againBtn').onclick=()=>{ initAudio(); if(G.cfg.fs) goFull(); startGame(G.cfg); };
+$('#menuBtn').onclick=()=>{ G.dead=true; wake(false); exitFull(); $('#endov').classList.add('hidden'); renderHist(); show('setup'); };
+
+/* ================= MÓDULOS ================= */
+function wiresAnswer(t){
+  const n=t.length,c=k=>t.filter(x=>x===k).length,first=k=>t.indexOf(k),last=k=>t.lastIndexOf(k),odd=G.odd;
+  if(n===3){ if(c('productor')===0)return 1; if(c('descomponedor')>=1)return first('descomponedor'); return 2; }
+  if(n===4){ if(c('productor')>1&&odd)return last('productor'); if(t[3]==='carnivoro'&&c('productor')===0)return 0; if(c('herbivoro')===1)return first('herbivoro'); return 1; }
+  if(n===5){ if(t[4]==='descomponedor'&&odd)return 3; if(c('carnivoro')===1&&c('productor')>1)return 0; if(c('descomponedor')===0)return 1; return 0; }
+  if(c('herbivoro')===0&&odd)return 2; if(c('descomponedor')===1&&c('carnivoro')>1)return 3; if(c('carnivoro')===0)return 5; return 3;
+}
+function buildCables(m){
+  const n=rint(3,6),types=[];
+  for(let i=0;i<n;i++){ const r=Math.random()*10.5; types.push(r<3?'productor':r<6?'herbivoro':r<9?'carnivoro':'descomponedor'); }
+  const used=new Set();
+  const names=types.map(t=>{ const v=shuffle(ORGS[t]).find(x=>!used.has(x))||pick(ORGS[t]); used.add(v); return v; });
+  const ans=wiresAnswer(types),cols=shuffle(WIRE_COLORS);
+  m.body.innerHTML=names.map((nm,i)=>`<button class="wire" data-i="${i}" style="--c:${cols[i]}" aria-label="Cable ${i+1}: ${nm}"><span class="wn">${i+1}</span><span class="term"></span><span class="cable"></span><span class="tag">${nm}</span></button>`).join('');
+  m.body.querySelectorAll('.wire').forEach(b=>b.onclick=()=>{
+    if(m.solved||!live()||b.classList.contains('cut'))return;
+    b.classList.add('cut'); sSnip();
+    if(+b.dataset.i===ans) solve(m); else strike(m);
+  });
+}
+function buildBoton(m){
+  const vivo=Math.random()<.5,frase=pick(vivo?VIDA_SI:VIDA_NO),color=pick(Object.keys(STRIPS));
+  m.body.innerHTML=`<div class="plate">“${frase}”</div><div class="btnrow"><button class="bigbtn">Pulsar</button><div class="strip" aria-hidden="true"></div></div>`;
+  const btn=m.body.querySelector('.bigbtn'),strip=m.body.querySelector('.strip');
+  let down=false,held=false,t=null;
+  btn.addEventListener('pointerdown',e=>{
+    if(m.solved||!live())return; down=true; held=false;
+    try{btn.setPointerCapture(e.pointerId);}catch(_){}
+    t=setTimeout(()=>{ if(down){ held=true; strip.style.background=STRIPS[color].hex; strip.style.color=STRIPS[color].hex; strip.classList.add('lit'); sClick(); } },450);
+  });
+  const up=()=>{
+    if(!down)return; down=false; clearTimeout(t);
+    strip.style.background=''; strip.classList.remove('lit');
+    if(m.solved||!live())return;
+    if(!held){ vivo?solve(m):strike(m); }
+    else if(vivo){ strike(m); }
+    else { timerStr().includes(String(STRIPS[color].d))?solve(m):strike(m); }
+  };
+  btn.addEventListener('pointerup',up); btn.addEventListener('pointercancel',up);
+  btn.addEventListener('contextmenu',e=>e.preventDefault());
+}
+function buildSeq(m,header,items,expected){
+  m.body.innerHTML=`<div class="plate small">${header}</div><div class="keys">${items.map(x=>`<button class="key" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;
+  let step=0;
+  m.body.querySelectorAll('.key').forEach(b=>b.onclick=()=>{
+    if(m.solved||!live()||b.classList.contains('done'))return;
+    if(b.dataset.v===expected[step]){ step++; b.classList.add('done'); b.dataset.n=step; sClick(); if(step===expected.length) solve(m); }
+    else strike(m);
+  });
+}
+function buildFlujo(m){
+  const eco=pick(ECOS),intruso=pick(DESC.filter(x=>!eco.c.includes(x)));
+  const expected=G.vowel?eco.c.slice().reverse():eco.c.slice();
+  buildSeq(m,`Ecosistema: <b>${eco.n}</b>`,shuffle([...eco.c,intruso]),expected);
+}
+function buildRamas(m){
+  const sel=shuffle(RAMAS).slice(0,4);
+  let ord=sel.slice().sort((a,b)=>a.r.localeCompare(b.r,'es'));
+  if(G.cultivos>=2) ord.reverse();
+  buildSeq(m,'¿Qué rama de la biología estudia…?',sel.map(x=>x.o),ord.map(x=>x.o));
+}
+function buildCodigo(m){
+  const cods=shuffle(Object.keys(CODONES)).slice(0,2); let st=0,opts=[],idx=0;
+  const render=()=>{
+    const cod=cods[st],correct=CODONES[cod];
+    opts=shuffle([correct,...shuffle(Object.values(CODONES).filter(a=>a!==correct)).slice(0,5)]); idx=0;
+    m.body.innerHTML=`<div class="dlabel">Cadena molde de ADN · codón ${st+1} de 2</div>
+      <div class="dna">${[...cod].map(b=>`<span>${ARN_A_MOLDE[b]}</span>`).join('')}</div>
+      <div class="selector"><button class="arrow" data-d="-1" aria-label="Anterior">◀</button><div class="aa" aria-live="polite">${opts[0]}</div><button class="arrow" data-d="1" aria-label="Siguiente">▶</button></div>
+      <button class="synth">Sintetizar</button>
+      <div class="stages"><i class="${st>0?'on':''}"></i><i></i></div>`;
+    m.body.querySelectorAll('.arrow').forEach(a=>a.onclick=()=>{ if(!live())return; idx=(idx+ +a.dataset.d+opts.length)%opts.length; m.body.querySelector('.aa').textContent=opts[idx]; sClick(); });
+    m.body.querySelector('.synth').onclick=()=>{
+      if(m.solved||!live())return;
+      if(opts[idx]===correct){ st++; if(st===2){ m.body.querySelectorAll('.stages i').forEach(i=>i.classList.add('on')); solve(m);} else { sClick(); render(); } }
+      else strike(m);
+    };
+  };
+  render();
+}
+function buildTermo(m){
+  m.state='idle';
+  const idle=(first)=>{
+    m.state='idle'; m.next=first?rint(15,30):rint(25,45); m.el.classList.remove('alert');
+    m.body.innerHTML=`<div class="idle">Temperatura estable.<br>Vigilen este módulo.</div>`;
+  };
+  const activate=()=>{
+    const reduce=Math.random()<.5; m.ans=reduce; m.left=20; m.shown=-1; m.state='active';
+    m.el.classList.add('alert'); sWarn();
+    m.body.innerHTML=`<div class="plate">“${pick(reduce?REDUCE:AUMENTA)}”</div>
+      <div class="gauge"><div></div></div><div class="tcount">20</div>
+      <div class="tbtns"><button data-v="1">Reduce</button><button data-v="0">Aumenta</button></div>`;
+    m.body.querySelectorAll('.tbtns button').forEach(b=>b.onclick=()=>{
+      if(m.state!=='active'||!live())return;
+      if((b.dataset.v==='1')===m.ans){ sOk(); idle(false); } else { strike(m); if(!G.over) idle(false); }
+    });
+  };
+  m.tick=dt=>{
+    if(m.state==='idle'){ m.next-=dt; if(m.next<=0) activate(); return; }
+    m.left-=dt;
+    const g=m.body.querySelector('.gauge div'); if(g) g.style.width=Math.min(100,(1-m.left/20)*100)+'%';
+    const s=Math.max(0,Math.ceil(m.left)); if(s!==m.shown){ m.shown=s; const c=m.body.querySelector('.tcount'); if(c)c.textContent=s; }
+    if(m.left<=0){ strike(m); if(!G.over) idle(false); }
+  };
+  idle(true);
+}
+
+/* ================= MANUAL ================= */
+function renderManual(){
+  const li=a=>a.map(x=>`<li>${x}</li>`).join('');
+  $('#manual').innerHTML=`
+  <h1>Manual de desactivación · Bio-Bomba</h1>
+  <p>Ustedes son el equipo de expertos. Solo el desactivador ve la bomba; ustedes no pueden verla. Pídanle que describa lo que ve y díganle qué hacer.</p>
+  <h3>Sugerencia de roles</h3>
+  <ul>
+    <li><b>Coordinador:</b> organiza la conversación y decide qué módulo atacar primero.</li>
+    <li><b>Secretario:</b> anota los datos del chasis: número de serie y cultivos.</li>
+    <li><b>Analista:</b> busca la regla correcta en el manual.</li>
+    <li><b>Diseñador y encargado de materiales:</b> revisan la respuesta antes de que el desactivador actúe.</li>
+  </ul>
+
+  <section class="modsec">
+  <h2>Datos del chasis</h2>
+  <p>Arriba de la bomba hay tres placas que varias reglas necesitan:</p>
+  <ul>
+    <li><b>Número de serie:</b> seis caracteres. Siempre termina en un número. Nunca lleva las letras I ni O ni los números 0 ni 1, para que no se confundan. Algunas reglas preguntan si termina en número impar o si contiene una vocal (A, E o U).</li>
+    <li><b>Cultivos 🧫:</b> cuántas cajas de Petri tiene la bomba (de 0 a 3).</li>
+    <li><b>Errores:</b> cada error hace que el reloj corra 25 % más rápido. Si llegan al límite, la bomba explota.</li>
+  </ul>
+  <p>La bomba se desactiva cuando todos los módulos tienen la luz verde. El Termostato no se desactiva: solo hay que vigilarlo.</p>
+  </section>
+
+  <section class="modsec">
+  <h2>🔌 Cables tróficos</h2>
+  <p>El módulo tiene de 3 a 6 cables numerados de arriba hacia abajo. Cada cable lleva el nombre de un organismo. Solo hay que cortar <b>uno</b>. Clasifiquen cada organismo como productor, herbívoro, carnívoro o descomponedor, cuenten los cables y apliquen la <b>primera</b> regla que se cumpla.</p>
+  <h3>3 cables</h3>
+  <ul>${li(['Si no hay ningún productor, corten el cable 2.','Si no, si hay al menos un descomponedor, corten el primer descomponedor.','Si no, corten el último cable.'])}</ul>
+  <h3>4 cables</h3>
+  <ul>${li(['Si hay más de un productor y el número de serie termina en número impar, corten el último productor.','Si no, si el último cable es un carnívoro y no hay productores, corten el cable 1.','Si no, si hay exactamente un herbívoro, corten el herbívoro.','Si no, corten el cable 2.'])}</ul>
+  <h3>5 cables</h3>
+  <ul>${li(['Si el último cable es un descomponedor y el número de serie termina en número impar, corten el cable 4.','Si no, si hay exactamente un carnívoro y más de un productor, corten el cable 1.','Si no, si no hay descomponedores, corten el cable 2.','Si no, corten el cable 1.'])}</ul>
+  <h3>6 cables</h3>
+  <ul>${li(['Si no hay herbívoros y el número de serie termina en número impar, corten el cable 3.','Si no, si hay exactamente un descomponedor y más de un carnívoro, corten el cable 4.','Si no, si no hay carnívoros, corten el último cable.','Si no, corten el cable 4.'])}</ul>
+  <div class="guia"><div class="gt">Guía de repaso: niveles tróficos</div>
+    <ul>
+      <li><b>Productor</b> (fabrica su alimento): ${ORGS.productor.join(', ')}.</li>
+      <li><b>Herbívoro</b> (consumidor primario): ${ORGS.herbivoro.join(', ')}.</li>
+      <li><b>Carnívoro</b> (consumidor secundario o terciario): ${ORGS.carnivoro.join(', ')}.</li>
+      <li><b>Descomponedor</b> (degrada restos de seres vivos): ${ORGS.descomponedor.join(', ')}.</li>
+    </ul></div>
+  </section>
+
+  <section class="modsec">
+  <h2>🔴 El botón de la vida</h2>
+  <p>Hay una placa con una frase, un botón rojo y una franja que se enciende al mantener presionado.</p>
+  <ol>
+    <li>Si la frase es una <b>característica de los seres vivos</b>, presionen el botón y suéltenlo de inmediato.</li>
+    <li>Si <b>no</b> lo es, mantengan presionado. Se encenderá la franja. Suelten cuando el reloj muestre, en cualquier posición, el dígito que indica su color:
+      <table><thead><tr><th>Color de la franja</th><th>Suelten cuando el reloj tenga un…</th></tr></thead>
+      <tbody><tr><td>Azul</td><td class="mono">4</td></tr><tr><td>Amarillo</td><td class="mono">5</td></tr><tr><td>Cualquier otro color</td><td class="mono">1</td></tr></tbody></table></li>
+  </ol>
+  <div class="guia"><div class="gt">Guía de repaso: características de los seres vivos</div>
+    <p>${VIDA_SI.join(' · ')}.</p></div>
+  </section>
+
+  <section class="modsec">
+  <h2>⚡ Flujo de energía</h2>
+  <p>El módulo muestra un ecosistema de México y cinco organismos. Uno de ellos es un <b>descomponedor</b>: no forma parte de la cadena, no lo presionen.</p>
+  <p>Presionen los otros cuatro siguiendo el flujo de la energía: productor → consumidor primario → consumidor secundario → consumidor terciario.</p>
+  <p>Si el número de serie <b>contiene una vocal (A, E o U)</b>, presiónenlos al revés: del consumidor terciario al productor. Si no tiene vocal, van del productor al consumidor terciario.</p>
+  <div class="guia"><div class="gt">Guía de repaso: cadenas alimenticias</div>
+    <table><thead><tr><th>Ecosistema</th><th>Cadena (de productor a consumidor terciario)</th></tr></thead>
+    <tbody>${ECOS.map(e=>`<tr><td>${e.n}</td><td>${e.c.join(' → ')}</td></tr>`).join('')}</tbody></table></div>
+  </section>
+
+  <section class="modsec">
+  <h2>🔬 Ramas de la biología</h2>
+  <p>El módulo muestra cuatro objetos de estudio. Identifiquen qué rama de la biología estudia cada uno y presiónenlos en <b>orden alfabético</b> del nombre de la rama (de la A a la Z).</p>
+  <p>Si la bomba tiene <b>2 o más cultivos 🧫</b>, presiónenlos en orden inverso (de la Z a la A).</p>
+  <div class="guia"><div class="gt">Guía de repaso: ramas y lo que estudian</div>
+    <table><thead><tr><th>Objeto de estudio</th><th>Rama</th></tr></thead>
+    <tbody>${RAMAS.map(r=>`<tr><td>${r.o}</td><td>${r.r}</td></tr>`).join('')}</tbody></table></div>
+  </section>
+
+  <section class="modsec">
+  <h2>🧬 Código genético</h2>
+  <p>La pantalla muestra tres bases de la <b>cadena molde de ADN</b>. Transcríbanlas a ARN mensajero, busquen el codón en la tabla y digan el aminoácido. El desactivador lo elige con ◀ ▶ y presiona <b>Sintetizar</b>. Son dos codones seguidos.</p>
+  <div class="guia"><div class="gt">Guía de repaso: complementariedad ADN → ARN</div>
+    <p class="mono">A → U &nbsp;&nbsp; T → A &nbsp;&nbsp; C → G &nbsp;&nbsp; G → C</p>
+    <p>En el ARN no hay timina (T): su lugar lo ocupa el uracilo (U).</p></div>
+  <table><thead><tr><th>Codón de ARN</th><th>Aminoácido</th></tr></thead>
+  <tbody>${Object.entries(CODONES).map(([c,a])=>`<tr><td class="mono">${c}</td><td>${a}</td></tr>`).join('')}</tbody></table>
+  </section>
+
+  <section class="modsec">
+  <h2>🌡️ Termostato (vigilancia)</h2>
+  <p>Este módulo no se desactiva. De vez en cuando se enciende en naranja y muestra una acción humana. Tienen <b>20 segundos</b> para responder:</p>
+  <ul><li>Si la acción <b>reduce</b> los gases de efecto invernadero, presionen <b>Reduce</b>.</li><li>Si los <b>aumenta</b>, presionen <b>Aumenta</b>.</li></ul>
+  <p>Responder mal o no responder a tiempo cuenta como error.</p>
+  <div class="guia"><div class="gt">Guía de repaso: acciones y gases de efecto invernadero</div>
+    <p><b>Reducen:</b> ${REDUCE.join(', ')}.</p>
+    <p><b>Aumentan:</b> ${AUMENTA.join(', ')}.</p></div>
+  </section>`;
+  $('#manual').classList.toggle('noguia',!$('#guiaChk').checked);
+}
+
+/* ================= APP WEB ================= */
+// Pantalla completa y pantalla siempre encendida durante la ronda
+function goFull(){ try{ const d=document.documentElement; if(!document.fullscreenElement&&d.requestFullscreen) d.requestFullscreen().catch(()=>{}); }catch(e){} }
+function exitFull(){ try{ if(document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }catch(e){} }
+let wl=null;
+async function wake(on){ try{ if(on&&'wakeLock' in navigator){ wl=await navigator.wakeLock.request('screen'); } else if(!on&&wl){ await wl.release(); wl=null; } }catch(e){} }
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&G&&!G.dead&&!G.over) wake(true); });
+
+// Atajo: P pausa o continúa
+document.addEventListener('keydown',e=>{ if((e.key==='p'||e.key==='P')&&!$('#game').classList.contains('hidden')&&!e.target.matches('input,select')) $('#pauseBtn').click(); });
+
+// Registro en Google Sheets con cola de pendientes (por si no hay internet)
+const gsUrl=()=>load('biobomba-gsurl','')||CONFIG.urlAppsScript;
+const pendientes=()=>load('biobomba-pend',[]);
+function gsEstado(){
+  const p=pendientes().length;
+  $('#gsStatus').textContent=gsUrl()?(p?`Hay ${p} ronda(s) por enviar. Se enviarán solas cuando haya internet.`:'Conectado. Todas las rondas están enviadas.'):'Sin URL: las rondas se guardan solo en esta computadora.';
+}
+let enviando=false;
+async function enviarPendientes(){
+  const url=gsUrl(); if(!url||enviando){ gsEstado(); return; }
+  enviando=true;
+  try{
+    let p=pendientes();
+    while(p.length){
+      const r=p[0];
+      try{ await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(r)}); }
+      catch(e){ break; }
+      p=pendientes().filter(x=>x.idEnvio!==r.idEnvio); store('biobomba-pend',p);
+    }
+  } finally { enviando=false; gsEstado(); }
+}
+function registrar(r){ const p=pendientes(); p.push(r); store('biobomba-pend',p.slice(-500)); enviarPendientes(); }
+$('#gsUrl').value=load('biobomba-gsurl','')||CONFIG.urlAppsScript;
+$('#gsSave').onclick=()=>{
+  const v=$('#gsUrl').value.trim();
+  if(v&&!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(v)){ $('#gsStatus').textContent='La URL debe empezar con https://script.google.com/macros/s/ y terminar en /exec.'; return; }
+  store('biobomba-gsurl',v); enviarPendientes();
+};
+$('#gsRetry').onclick=enviarPendientes;
+window.addEventListener('online',enviarPendientes);
+gsEstado(); enviarPendientes();
+
+// Manual en celular: #manual (con guías) y #manual-sin-guias
+function route(){
+  const h=location.hash;
+  if(h==='#manual'||h==='#manual-sin-guias'){
+    document.body.classList.add('phone');
+    $('#guiaChk').checked=(h==='#manual');
+    renderManual(); show('manualScreen');
+  } else if(document.body.classList.contains('phone')){
+    document.body.classList.remove('phone'); show('setup');
+  }
+}
+window.addEventListener('hashchange',route);
+route();
+
+function makeQR(){
+  const base=location.href.split('#')[0];
+  [['qr1','#manual'],['qr2','#manual-sin-guias']].forEach(([id,h])=>{
+    const el=$('#'+id); el.innerHTML='';
+    if(window.QRCode){ new QRCode(el,{text:base+h,width:160,height:160,correctLevel:QRCode.CorrectLevel.M}); }
+    else el.textContent=base+h;
+  });
+}
+window.addEventListener('load',()=>{
+  makeQR();
+  if('serviceWorker' in navigator&&location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+});
+</script>
+</body>
+</html>
