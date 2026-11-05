@@ -19,4 +19,4 @@ App web de Biología 1° inspirada en Keep Talking and Nobody Explodes.
 Si quieres que la URL venga puesta en cualquier computadora, pégala en `CONFIG.urlAppsScript` al inicio del código de `index.html`.
 
 ## Actualizar la app
-Si cambias `index.html`, cambia también el número de versión (`biobomba-v3`, `v3`…) en `sw.js` para que las computadoras descarguen la versión nueva.
+Si cambias `index.html`, cambia también el número de versión (`biobomba-v4`, `v3`…) en `sw.js` para que las computadoras descarguen la versión nueva.

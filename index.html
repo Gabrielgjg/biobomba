@@ -23,7 +23,7 @@
   --enamel:#e8e2cf; --enamel-text:#2b2a22; --enamel-muted:#6b6650;
   --lcd:#2a1712; --lcd-text:#ff5a36; --led-off:#6e2a22; --led-on:#ff4a2e; --led-ok:#3fbf4f;
   --key:#f8f4e6; --key-edge:#b4ad94; --key-text:#2b2a22; --ok-bg:#3c8a46; --ok-text:#ffffff;
-  --metal:#9c9b8f; --qr-bg:#ffffff; --warn:#e8621a; --warn-text:#2b1405; --strip-off:#3b3a33;
+  --metal:#9c9b8f; --qr-bg:#ffffff; --hazard-y:#f2c200; --warn:#e8621a; --warn-text:#2b1405; --strip-off:#3b3a33;
   color-scheme:light;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
@@ -84,35 +84,62 @@ th{color:var(--muted);font-weight:700}
 .lose{color:var(--danger);font-weight:700}
 .empty{color:var(--muted)}
 
-/* ---------- La bomba ---------- */
-#game{padding:14px}
-.casing{max-width:1400px;margin:0 auto;background:var(--case);border:6px solid var(--case-edge);border-radius:22px;padding:16px;color:var(--case-text);
+/* ---------- La bomba (caja 3D que se gira) ---------- */
+#game{min-height:100vh;display:flex;flex-direction:column;background:var(--bg)}
+.bar{position:relative;z-index:30;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:8px}
+.bar button{background:var(--surface);color:var(--text);border:2px solid var(--border);border-radius:10px;padding:8px 14px;font-weight:700}
+.bar .view{font-family:"Chakra Petch",sans-serif;font-weight:700;min-width:9em;text-align:center}
+.stagewrap{position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;padding:6px}
+#stage{position:relative}
+#scaler{position:absolute;left:0;top:0;width:980px;height:560px;transform-origin:0 0}
+.scene{width:980px;height:560px;perspective:2400px}
+.box{position:relative;width:980px;height:560px;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,.7,.3,1)}
+.face{position:absolute;top:0;height:560px;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--case);border:6px solid var(--case-edge);border-radius:20px;pointer-events:none;color:var(--case-text);
   background-image:repeating-linear-gradient(135deg,transparent 0 18px,rgba(0,0,0,.035) 18px 36px)}
-.chassis{display:flex;flex-wrap:wrap;gap:14px;align-items:stretch;margin-bottom:16px}
-.lcdbox{background:var(--lcd);border:4px solid var(--case-edge);border-radius:12px;padding:6px 22px;display:flex;align-items:center}
-#timer{font-family:"Share Tech Mono","Courier New",monospace;font-size:clamp(3rem,8vw,5.6rem);color:var(--lcd-text);line-height:1;letter-spacing:.04em;text-shadow:0 0 14px rgba(255,90,54,.45)}
-.plaque{background:var(--enamel);color:var(--enamel-text);border-radius:10px;padding:8px 14px;display:flex;flex-direction:column;justify-content:center;border:3px solid var(--case-edge)}
-.plaque .k{font-size:.85rem;color:var(--enamel-muted);font-weight:700}
-.plaque .v{font-family:"Share Tech Mono","Courier New",monospace;font-size:clamp(1.5rem,3vw,2.2rem);letter-spacing:.12em}
+.face.active{pointer-events:auto}
+.face.front{left:0;width:980px;transform:translateZ(110px)}
+.face.back{left:0;width:980px;transform:rotateY(180deg) translateZ(110px)}
+.face.right{left:380px;width:220px;transform:rotateY(90deg) translateZ(490px)}
+.face.left{left:380px;width:220px;transform:rotateY(-90deg) translateZ(490px)}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:12px;padding:12px;height:100%}
+.slotblank{position:relative;border:4px solid var(--case-edge);border-radius:12px;background:var(--case-edge);display:flex;align-items:center;justify-content:center}
+.vent{width:70%;height:55%;background:repeating-linear-gradient(0deg,#262a1b 0 8px,transparent 8px 16px);border-radius:6px;opacity:.8}
+.timerslot{position:relative;background:var(--enamel);border:4px solid var(--case-edge);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.lcdbox{background:var(--lcd);border:4px solid var(--case-edge);border-radius:12px;padding:6px 20px}
+#timer{font-family:"Share Tech Mono","Courier New",monospace;font-size:4.6rem;color:var(--lcd-text);line-height:1;letter-spacing:.04em;text-shadow:0 0 14px rgba(255,90,54,.45)}
 .strikes{display:flex;gap:6px}
 .strikes span{width:30px;height:30px;border-radius:50%;background:var(--led-off);display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:var(--lcd)}
 .strikes span.on{background:var(--led-on);box-shadow:0 0 12px var(--led-on)}
-.ctrl{margin-left:auto;display:flex;gap:8px;align-items:center}
-.ctrl button{background:var(--enamel);color:var(--enamel-text);border:3px solid var(--case-edge);border-radius:10px;padding:10px 16px;font-weight:700}
-.bombarea{position:relative}
-#bomb{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
-.mod{position:relative;background:var(--enamel);color:var(--enamel-text);border:4px solid var(--case-edge);border-radius:14px;padding:16px 16px 18px;min-height:280px}
-.mod::before,.mod::after{content:"";position:absolute;width:10px;height:10px;border-radius:50%;background:var(--metal);bottom:8px}
-.mod::before{left:8px}.mod::after{right:8px}
-.mod h3{font-size:1.25rem;margin:0 34px 12px 0}
-.mod .led{position:absolute;top:14px;right:14px;width:20px;height:20px;border-radius:50%;background:var(--led-off);border:2px solid var(--case-edge)}
+.tlabel{font-family:"Share Tech Mono",monospace;color:var(--enamel-muted);font-size:.85rem;letter-spacing:.1em}
+/* Lados */
+.edge{display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;height:100%;padding:16px 10px}
+.plaque{background:var(--enamel);color:var(--enamel-text);border-radius:8px;padding:6px 12px;border:3px solid var(--case-edge);text-align:center;width:184px}
+.plaque .k{display:block;font-size:.72rem;color:var(--enamel-muted);font-weight:700;letter-spacing:.06em}
+.plaque .v{font-family:"Share Tech Mono","Courier New",monospace;font-size:1.9rem;letter-spacing:.12em}
+.rack{background:var(--case-edge);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;align-items:center;width:150px}
+.rack .k{font-size:.72rem;color:var(--case-muted);font-weight:700;letter-spacing:.08em}
+.dish{width:96px;height:34px;border-radius:50%;border:3px solid #cfd8c4;background:radial-gradient(circle at 28% 50%,#e0533a 0 5px,transparent 6px),radial-gradient(circle at 55% 35%,#f2c200 0 6px,transparent 7px),radial-gradient(circle at 72% 62%,#5cbf5a 0 5px,transparent 6px),radial-gradient(circle at 45% 70%,#f4f1e6 0 3px,transparent 4px),rgba(220,235,225,.55)}
+.dish.empty{background:rgba(220,235,225,.18)}
+.bio{width:150px;background:var(--hazard-y);color:#1b1b14;border:3px solid #1b1b14;border-radius:6px;padding:6px;text-align:center;font-weight:700;font-size:.78rem;letter-spacing:.04em}
+.bio b{display:block;font-size:2rem;line-height:1}
+.lote{width:170px;background:#fbfaf4;color:#1b1b14;border-radius:4px;padding:6px 8px;font-family:"Share Tech Mono",monospace;font-size:.72rem}
+.lote i{display:block;height:26px;margin-bottom:4px;background:repeating-linear-gradient(90deg,#1b1b14 0 2px,transparent 2px 4px,#1b1b14 4px 5px,transparent 5px 8px,#1b1b14 8px 11px,transparent 11px 13px)}
+.screw{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle,#c4c3b6 0 35%,#8d8c80 36%);position:relative}
+.screw::after{content:"";position:absolute;left:4px;right:4px;top:10px;height:2px;background:#5e5d55;transform:rotate(35deg)}
+/* Módulos dentro de su ranura */
+.mod{position:relative;background:var(--enamel);color:var(--enamel-text);border:4px solid var(--case-edge);border-radius:12px;padding:10px 12px 14px;overflow:hidden;display:flex;flex-direction:column}
+.mod::before,.mod::after{content:"";position:absolute;width:9px;height:9px;border-radius:50%;background:var(--metal);bottom:5px}
+.mod::before{left:6px}.mod::after{right:6px}
+.mod h3{font-size:1.02rem;margin:0 30px 8px 0}
+.mod .led{position:absolute;top:9px;right:9px;width:18px;height:18px;border-radius:50%;background:var(--led-off);border:2px solid var(--case-edge)}
 .mod.solved .led{background:var(--led-ok);box-shadow:0 0 14px var(--led-ok)}
 .mod.solved .mbody{opacity:.55;pointer-events:none}
 .mod.alert .led{background:var(--warn);box-shadow:0 0 14px var(--warn)}
 .mod.shake{animation:shake .35s}
+.mbody{flex:1;display:flex;flex-direction:column;justify-content:center}
 @keyframes shake{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-.plate{background:var(--key);border:2px dashed var(--key-edge);border-radius:10px;padding:10px 12px;font-size:clamp(1.15rem,2vw,1.45rem);font-weight:700;text-align:center;margin-bottom:12px}
-.plate.small{font-size:1.1rem;font-weight:400}
+.plate{background:var(--key);border:2px dashed var(--key-edge);border-radius:8px;padding:6px 10px;font-size:1.08rem;font-weight:700;text-align:center;margin-bottom:8px}
+.plate.small{font-size:.98rem;font-weight:400}
 .plate b{font-weight:700}
 
 /* Cables */
@@ -233,27 +260,30 @@ details.cfg summary{font-weight:700;cursor:pointer}
 .qrcap{font-size:.95rem;color:var(--muted);text-align:center;margin-top:6px;max-width:180px}
 body.phone .mtools{display:none}
 body.phone .wrap{padding:8px}
-/* Proyectores de poca altura (1366×768, 1280×720): que quepa toda la bomba */
-@media (min-width:900px) and (max-height:860px){
-  #game{padding:2px}
-  .casing{padding:10px;border-width:5px}
-  .chassis{margin-bottom:10px;gap:10px}
-  #timer{font-size:3.6rem}
-  .plaque .v{font-size:1.6rem}
-  #bomb{gap:10px}
-  .mod{min-height:0;padding:10px 12px 14px}
-  .mod h3{font-size:1.1rem;margin-bottom:8px}
-  .plate{padding:6px 10px;margin-bottom:8px;font-size:1.15rem}
-  .wire{padding:3px 0}
-  .key{padding:8px;min-height:48px;font-size:1.05rem}
-  .keys{gap:8px}
-  .bigbtn{width:112px;height:112px;font-size:1.25rem}
-  .strip{height:112px}
-  .dna{margin-bottom:8px}.dna span{height:52px;width:50px;font-size:2rem}
-  .selector{margin-bottom:8px}.selector .arrow{width:44px;height:44px}.selector .aa{padding:8px}
-  .synth{padding:9px 22px}
-  .idle{padding:14px 0}
-}
+/* Ajustes de tamaño para que cada módulo quepa en su ranura */
+.wire{padding:1px 0;gap:8px}
+.wires6 .tag{font-size:.9rem;padding:1px 8px}
+.wires6 .wire{padding:0}
+.wires6 .term{height:18px}
+.term{height:20px}
+.cable{height:10px}
+.tag{font-size:.95rem;padding:2px 8px;min-width:7.5em}
+.bigbtn{width:112px;height:112px;font-size:1.2rem}
+.strip{height:112px;width:24px}
+.keys{gap:7px}
+.key{padding:5px 6px;min-height:42px;font-size:.92rem;line-height:1.2;border-bottom-width:5px}
+.keys.k3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.keys.k3 .key{font-size:.9rem;padding:6px 4px;min-height:54px}
+.plate.small{font-size:.92rem;padding:5px 8px}
+.dna{margin:0 0 8px}.dna span{width:48px;height:48px;font-size:1.9rem}
+.dlabel{margin-bottom:4px;font-size:.9rem}
+.selector{margin-bottom:8px}.selector .arrow{width:42px;height:42px}.selector .aa{padding:8px;font-size:1.05rem}
+.synth{padding:8px 22px;font-size:1rem}
+.stages{margin-top:8px}
+.gauge{height:16px;margin-bottom:6px}
+.tcount{font-size:1.6rem;line-height:1.2}
+.tbtns button{padding:9px;font-size:1rem}
+.idle{padding:10px 0}
 @media (prefers-reduced-motion: reduce){.mod.shake{animation:none}#flash{transition:none}}
 @page{size:letter;margin:10mm}
 @media print{
@@ -301,6 +331,7 @@ body.phone .wrap{padding:8px}
         <li>Imprime el manual (uno por equipo).</li>
         <li>El desactivador se sienta frente a la compu, de espaldas al equipo.</li>
         <li>Los expertos leen el manual sin ver la pantalla.</li>
+        <li>La bomba se gira con ◀ ▶ o con las flechas del teclado: el número de serie y los cultivos están en los lados, y algunos módulos quedan atrás.</li>
         <li>Cambien de desactivador en cada ronda.</li>
       </ol>
     </div>
@@ -353,20 +384,26 @@ body.phone .wrap{padding:8px}
 
 <!-- ================= JUEGO ================= -->
 <div id="game" class="hidden">
-  <div class="casing">
-    <div class="chassis">
-      <div class="lcdbox"><div id="timer" aria-live="off">5:00</div></div>
-      <div class="plaque"><span class="k">Número de serie</span><span class="v" id="serial">—</span></div>
-      <div class="plaque"><span class="k">Cultivos</span><span class="v" id="cultivos">—</span></div>
-      <div class="plaque"><span class="k">Errores</span><div class="strikes" id="strikes"></div></div>
-      <div class="ctrl">
-        <button id="pauseBtn">Pausa</button>
-        <button id="quitBtn">Salir</button>
+  <div class="bar">
+    <button id="rotL" aria-label="Girar a la izquierda">◀ Girar</button>
+    <span class="view" id="viewName">Frente</span>
+    <button id="rotR" aria-label="Girar a la derecha">Girar ▶</button>
+    <button id="pauseBtn">Pausa</button>
+    <button id="quitBtn">Salir</button>
+  </div>
+  <div class="stagewrap">
+    <div id="stage">
+      <div id="scaler">
+        <div class="scene">
+          <div class="box" id="box">
+            <div class="face front active" data-f="0"><div class="slots" id="slotsF"></div></div>
+            <div class="face right" data-f="1"><div class="edge" id="edgeR"></div></div>
+            <div class="face back" data-f="2"><div class="slots" id="slotsB"></div></div>
+            <div class="face left" data-f="3"><div class="edge" id="edgeL"></div></div>
+          </div>
+        </div>
+        <div class="pause hidden" id="pauseOv">En pausa</div>
       </div>
-    </div>
-    <div class="bombarea">
-      <div id="bomb"></div>
-      <div class="pause hidden" id="pauseOv">En pausa</div>
     </div>
   </div>
 </div>
@@ -472,7 +509,7 @@ function readCfg(){
   return {team:$('#team').value.trim()||'Equipo sin nombre',grupo:$('#grupo').value,mins:+$('#mins').value,errs:+$('#errs').value,
     mods:[...document.querySelectorAll('#modchecks input:checked')].map(i=>i.value),sound:$('#sound').checked,fs:$('#fs').checked,secu:$('#secu').value.trim()||'Sin secundaria'};
 }
-function show(id){ ['setup','game','manualScreen'].forEach(s=>$('#'+s).classList.toggle('hidden',s!==id)); window.scrollTo(0,0); }
+function show(id){ ['setup','game','manualScreen'].forEach(s=>$('#'+s).classList.toggle('hidden',s!==id)); window.scrollTo(0,0); if(id==='game') fit(); }
 
 $('#startBtn').onclick=()=>{
   const cfg=readCfg();
@@ -502,30 +539,63 @@ function makeSerial(){
 function timerStr(){ const t=Math.max(0,Math.ceil(G.time)); return Math.floor(t/60)+':'+String(t%60).padStart(2,'0'); }
 const live=()=>G&&!G.over&&!G.paused;
 
+function renderEdge(){
+  const serial=`<div class="plaque"><span class="k">N.º DE SERIE</span><span class="v">${G.serial}</span></div>`;
+  const rack=`<div class="rack"><span class="k">CULTIVOS</span>${shuffle([0,1,2].map(i=>i<G.cultivos)).map(f=>`<i class="dish${f?'':' empty'}"></i>`).join('')}</div>`;
+  const bio=`<div class="bio"><b>☣</b>RIESGO BIOLÓGICO</div>`;
+  const lote=`<div class="lote"><i></i>LOTE ${rint(1000,9999)}-${pick(['A','B','C'])}</div>`;
+  const sc='<div class="screw"></div>';
+  const deco=shuffle([bio,lote]);
+  const a=shuffle([serial,deco[0]]),b=shuffle([rack,deco[1]]);
+  const sides=Math.random()<.5?[a,b]:[b,a];
+  $('#edgeR').innerHTML=sc+sides[0].join('')+sc; $('#edgeL').innerHTML=sc+sides[1].join('')+sc;
+}
 function startGame(cfg){
   if(G) G.dead=true;
   const serial=makeSerial();
   G={cfg,serial,odd:(+serial.slice(-1))%2===1,vowel:/[AEIOU]/.test(serial),cultivos:rint(0,3),
-     time:cfg.mins*60,strikes:0,max:cfg.errs,mods:[],over:false,paused:false,dead:false,last:performance.now(),lastStr:''};
-  $('#serial').textContent=serial;
-  $('#cultivos').textContent=G.cultivos?'🧫'.repeat(G.cultivos):'0';
+     time:cfg.mins*60,strikes:0,max:cfg.errs,mods:[],over:false,paused:false,dead:false,last:performance.now(),lastStr:'',rot:0};
+  renderEdge(); setRot(0,true);
+  $('#pauseOv').classList.add('hidden'); $('#pauseBtn').textContent='Pausa'; $('#endov').classList.add('hidden');
+  const list=shuffle(cfg.mods), n=list.length;
+  const nf=n<=3?n:rint(Math.ceil(n/2),Math.min(5,n));
+  const front=[{k:'timer'}].concat(list.slice(0,nf).map(k=>({k}))), back=list.slice(nf).map(k=>({k}));
+  const fill=(arr,el)=>{ el.innerHTML=''; shuffle(arr.concat(Array(6-arr.length).fill({k:'blank'}))).forEach(x=>el.appendChild(makeSlot(x.k))); };
+  fill(front,$('#slotsF')); fill(back,$('#slotsB'));
   renderStrikes();
-  $('#bomb').innerHTML=''; $('#pauseOv').classList.add('hidden'); $('#pauseBtn').textContent='Pausa';
-  $('#endov').classList.add('hidden');
-  const order=shuffle(cfg.mods.filter(k=>!MODS[k].needy));
-  if(cfg.mods.includes('termostato')) order.push('termostato');
-  order.forEach(k=>{
-    const def=MODS[k],el=document.createElement('section');
-    el.className='mod';
-    el.innerHTML=`<div class="led" aria-hidden="true"></div><h3><span aria-hidden="true">${def.icon}</span> ${def.name}</h3><div class="mbody"></div>`;
-    $('#bomb').appendChild(el);
-    const m={key:k,def,el,body:el.querySelector('.mbody'),solved:false,needy:!!def.needy};
-    G.mods.push(m); def.build(m);
-  });
   $('#timer').textContent=timerStr();
   show('game');
   const me=G; requestAnimationFrame(t=>{me.last=t;loop(me,t);});
 }
+function makeSlot(k){
+  const el=document.createElement('section');
+  if(k==='blank'){ el.className='slotblank'; el.innerHTML='<div class="vent"></div>'; return el; }
+  if(k==='timer'){ el.className='timerslot'; el.innerHTML='<div class="lcdbox"><div id="timer">0:00</div></div><div class="strikes" id="strikes"></div><span class="tlabel">ERRORES</span>'; return el; }
+  const def=MODS[k]; el.className='mod';
+  el.innerHTML=`<div class="led" aria-hidden="true"></div><h3><span aria-hidden="true">${def.icon}</span> ${def.name}</h3><div class="mbody"></div>`;
+  const m={key:k,def,el,body:el.querySelector('.mbody'),solved:false,needy:!!def.needy};
+  G.mods.push(m); def.build(m);
+  return el;
+}
+/* Giro de la bomba */
+const VIEWS=['Frente','Lado derecho','Atrás','Lado izquierdo'];
+function setRot(r,instant){
+  G.rot=r; const f=((r%4)+4)%4, box=$('#box');
+  const tf=`translateZ(${f%2?-380:0}px) rotateY(${-90*r}deg)`;
+  if(instant){ box.style.transition='none'; box.style.transform=tf; void box.offsetWidth; box.style.transition=''; }
+  else box.style.transform=tf;
+  document.querySelectorAll('.face').forEach(el=>el.classList.toggle('active',+el.dataset.f===f));
+  $('#viewName').textContent=VIEWS[f];
+}
+$('#rotL').onclick=()=>{ if(G&&!G.paused&&!G.over) setRot(G.rot-1); };
+$('#rotR').onclick=()=>{ if(G&&!G.paused&&!G.over) setRot(G.rot+1); };
+function fit(){
+  const bar=$('.bar').offsetHeight||56, aw=window.innerWidth-24, ah=window.innerHeight-bar-40;
+  const s=Math.max(.3,Math.min(aw/980,ah/560,1.6));
+  $('#stage').style.width=980*s+'px'; $('#stage').style.height=560*s+'px'; $('#scaler').style.transform=`scale(${s})`;
+}
+window.addEventListener('resize',()=>{ if(!$('#game').classList.contains('hidden')) fit(); });
+document.addEventListener('fullscreenchange',()=>setTimeout(()=>{ if(!$('#game').classList.contains('hidden')) fit(); },100));
 function loop(me,now){
   if(me.dead) return;
   const dt=Math.min(.25,(now-me.last)/1000); me.last=now;
@@ -587,6 +657,7 @@ function buildCables(m){
   const used=new Set();
   const names=types.map(t=>{ const v=shuffle(ORGS[t]).find(x=>!used.has(x))||pick(ORGS[t]); used.add(v); return v; });
   const ans=wiresAnswer(types),cols=shuffle(WIRE_COLORS);
+  if(n===6) m.body.classList.add('wires6');
   m.body.innerHTML=names.map((nm,i)=>`<button class="wire" data-i="${i}" style="--c:${cols[i]}" aria-label="Cable ${i+1}: ${nm}"><span class="wn">${i+1}</span><span class="term"></span><span class="cable"></span><span class="tag">${nm}</span></button>`).join('');
   m.body.querySelectorAll('.wire').forEach(b=>b.onclick=()=>{
     if(m.solved||!live()||b.classList.contains('cut'))return;
@@ -616,7 +687,7 @@ function buildBoton(m){
   btn.addEventListener('contextmenu',e=>e.preventDefault());
 }
 function buildSeq(m,header,items,expected){
-  m.body.innerHTML=`<div class="plate small">${header}</div><div class="keys">${items.map(x=>`<button class="key" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;
+  m.body.innerHTML=`<div class="plate small">${header}</div><div class="keys${items.length>4?' k3':''}">${items.map(x=>`<button class="key" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;
   let step=0;
   m.body.querySelectorAll('.key').forEach(b=>b.onclick=()=>{
     if(m.solved||!live()||b.classList.contains('done'))return;
@@ -633,7 +704,7 @@ function buildRamas(m){
   const sel=shuffle(RAMAS).slice(0,4);
   let ord=sel.slice().sort((a,b)=>a.r.localeCompare(b.r,'es'));
   if(G.cultivos>=2) ord.reverse();
-  buildSeq(m,'¿Qué rama de la biología estudia…?',sel.map(x=>x.o),ord.map(x=>x.o));
+  buildSeq(m,'¿Qué rama estudia…?',sel.map(x=>x.o),ord.map(x=>x.o));
 }
 function buildCodigo(m){
   const cods=shuffle(Object.keys(CODONES)).slice(0,2); let st=0,opts=[],idx=0;
@@ -684,7 +755,7 @@ function buildTermo(m){
 /* ================= MANUAL ================= */
 const T=(x,y,s,txt,extra='')=>`<text x="${x}" y="${y}" font-size="${s}" text-anchor="middle" fill="currentColor" stroke="none" font-family="sans-serif" ${extra}>${txt}</text>`;
 const FIG={
-  chasis:`<rect x="6" y="20" width="188" height="120" rx="10"/><rect x="16" y="32" width="74" height="40" rx="4" fill="currentColor"/>${T(53,60,22,'4:59','fill="#f6f3e6" font-family="monospace"').replace('fill="currentColor" ','')}<rect x="98" y="32" width="86" height="40" rx="4"/>${T(141,46,8,'N.º DE SERIE','font-family="monospace"')}${T(141,64,14,'4AE7K2','font-family="monospace"')}<rect x="16" y="84" width="92" height="44" rx="4"/>${T(62,96,8,'CULTIVOS','font-family="monospace"')}<ellipse cx="44" cy="114" rx="14" ry="7"/><ellipse cx="78" cy="114" rx="14" ry="7"/><rect x="116" y="84" width="68" height="44" rx="4"/>${T(150,96,8,'ERRORES','font-family="monospace"')}<circle cx="132" cy="114" r="7" fill="currentColor"/><circle cx="150" cy="114" r="7"/><circle cx="168" cy="114" r="7"/>`,
+  chasis:`<rect x="58" y="4" width="84" height="152" rx="10"/><circle cx="100" cy="14" r="4"/><rect x="66" y="24" width="68" height="34" rx="4"/>${T(100,36,7,'N.º DE SERIE','font-family="monospace"')}${T(100,52,13,'4AE7K2','font-family="monospace"')}<rect x="70" y="66" width="60" height="78" rx="6"/>${T(100,77,7,'CULTIVOS','font-family="monospace"')}<ellipse cx="100" cy="91" rx="20" ry="7" fill="currentColor"/><ellipse cx="100" cy="111" rx="20" ry="7" fill="currentColor"/><ellipse cx="100" cy="131" rx="20" ry="7"/>`,
   cables:`<rect x="6" y="6" width="188" height="148" rx="8"/>${['Nopal','Conejo','Hongo','Coyote'].map((n,i)=>{const y=32+i*32;return `${T(16,y+4,10,i+1,'font-weight="700"')}<rect x="24" y="${y-8}" width="8" height="16" fill="currentColor"/><line x1="32" y1="${y}" x2="112" y2="${y}" stroke-width="6" ${i%2?'stroke-dasharray="9 4"':''}/><rect x="116" y="${y-11}" width="68" height="22" rx="4"/>${T(150,y+4,11,n,'font-weight="700"')}`;}).join('')}`,
   boton:`<rect x="6" y="6" width="188" height="148" rx="8"/><rect x="18" y="16" width="164" height="30" rx="5" stroke-dasharray="5 3"/>${T(100,36,12,'“Respira”','font-weight="700"')}<circle cx="86" cy="98" r="40"/><circle cx="86" cy="98" r="33" stroke-width="1.5"/>${T(86,103,13,'Pulsar','font-weight="700"')}<rect x="146" y="60" width="18" height="78" rx="4"/>`,
   flujo:`<rect x="6" y="6" width="188" height="148" rx="8"/><rect x="18" y="16" width="164" height="26" rx="5" stroke-dasharray="5 3"/>${T(100,33,10,'Ecosistema: Manglar')}${[[18,50],[102,50],[18,84],[102,84],[18,118]].map(([x,y],i)=>`<rect x="${x}" y="${y}" width="80" height="28" rx="5"/>${T(x+40,y+18,10,['Cangrejo','Hongo','Mangle rojo','Cocodrilo','Mapache'][i],'font-weight="700"')}`).join('')}`,
@@ -692,20 +763,21 @@ const FIG={
   codigo:`<rect x="6" y="6" width="188" height="148" rx="8"/>${T(100,26,9,'CADENA MOLDE DE ADN','font-family="monospace"')}${['T','A','C'].map((b,i)=>`<rect x="${58+i*30}" y="34" width="24" height="30" rx="4" fill="currentColor"/>${T(70+i*30,56,18,b,'font-family="monospace"').replace('fill="currentColor"','fill="#f6f3e6"')}`).join('')}<rect x="22" y="78" width="26" height="26" rx="4"/>${T(35,96,12,'◀')}<rect x="56" y="78" width="88" height="26" rx="4"/>${T(100,95,10,'Metionina','font-weight="700"')}<rect x="152" y="78" width="26" height="26" rx="4"/>${T(165,96,12,'▶')}<rect x="60" y="116" width="80" height="26" rx="5" fill="currentColor"/>${T(100,133,10,'Sintetizar','font-weight="700"').replace('fill="currentColor"','fill="#f6f3e6"')}`,
   termostato:`<rect x="6" y="6" width="188" height="148" rx="8"/><rect x="18" y="16" width="164" height="30" rx="5" stroke-dasharray="5 3"/>${T(100,36,11,'“Plantar árboles”','font-weight="700"')}<rect x="22" y="58" width="156" height="14" rx="7"/><rect x="22" y="58" width="96" height="14" rx="7" fill="currentColor"/>${T(100,92,16,'14','font-family="monospace"')}<rect x="22" y="104" width="74" height="34" rx="5"/>${T(59,126,11,'Reduce','font-weight="700"')}<rect x="104" y="104" width="74" height="34" rx="5"/>${T(141,126,11,'Aumenta','font-weight="700"')}`
 };
-const figSVG=k=>`<figure class="mfig"><svg viewBox="0 0 200 160" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" aria-hidden="true">${FIG[k]}</svg><figcaption>Así se ve el módulo</figcaption></figure>`;
+const figSVG=k=>`<figure class="mfig"><svg viewBox="0 0 200 160" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" aria-hidden="true">${FIG[k]}</svg><figcaption>${k==='chasis'?'Detalles de los lados':'Así se ve el módulo'}</figcaption></figure>`;
 function renderManual(){
   const ol=a=>`<ol class="rules">${a.map(x=>`<li>${x}</li>`).join('')}</ol>`;
   const guia=(t,b,c='')=>`<div class="guia ${c}"><div class="gt">Guía de repaso · ${t}</div><div class="gb">${b}</div></div>`;
   const pages=[];
   const page=(num,title,look,fig,body,tip)=>pages.push({num,title,look,fig,body,tip});
 
-  page('00','Datos del chasis','Arriba de la bomba hay tres placas: número de serie, cultivos y errores.','chasis',`
-    <p>Antes de resolver los módulos, pidan al desactivador que lea las placas del chasis y anótenlas en la portada. Varias reglas dependen de estos datos.</p>
-    <h3>Número de serie</h3><p>Seis caracteres. Siempre termina en número. Nunca lleva las letras I ni O ni los números 0 ni 1, para que no se confundan. Algunas reglas preguntan si <b>termina en número impar</b> o si <b>contiene una vocal (A, E o U)</b>.</p>
-    <h3>Cultivos</h3><p>Cuántas cajas de Petri tiene la bomba, de 0 a 3.</p>
-    <h3>Errores</h3><p>Cada error hace que el reloj corra 25 % más rápido. Si llegan al límite, la bomba explota.</p>
+  page('00','Los lados de la bomba','Gírenla: el número de serie y los cultivos están en los lados; algunos módulos quedan atrás.','chasis',`
+    <p>Antes de resolver los módulos, pidan al desactivador que gire la bomba y revise sus cuatro caras. Anoten en la portada lo que encuentre: varias reglas dependen de estos datos.</p>
+    <h3>Número de serie</h3><p>Etiqueta en uno de los lados, con seis caracteres. Siempre termina en número. Nunca lleva las letras I ni O ni los números 0 ni 1. Algunas reglas preguntan si <b>termina en número impar</b> o si <b>contiene una vocal (A, E o U)</b>.</p>
+    <h3>Cultivos</h3><p>Una gradilla con tres cajas de Petri en el otro lado. Cuenten solo las cajas <b>con colonias</b> (manchas de color); las cajas vacías no cuentan. Puede haber de 0 a 3 cultivos.</p>
+    <h3>Decoración</h3><p>Las etiquetas de <b>riesgo biológico</b> y de <b>lote</b> no afectan ninguna regla. No se confundan: el número de lote no es el número de serie.</p>
+    <h3>Errores y módulos de atrás</h3><p>El temporizador muestra los errores; cada error hace que el reloj corra 25 % más rápido. Revisen también la parte de atrás: ahí puede haber módulos.</p>
     <div class="note"><b>Para ganar:</b> la bomba se desactiva cuando todos los módulos tienen la luz verde. El Termostato no se desactiva: solo hay que vigilarlo.</div>`,
-    'Anoten los datos del chasis en la portada.');
+    'Giren la bomba completa antes de empezar.');
 
   page('01','Cables tróficos','De 3 a 6 cables numerados; cada uno lleva el nombre de un organismo.','cables',`
     <p>Solo hay que cortar <b>un</b> cable. Clasifiquen cada organismo como productor, herbívoro, carnívoro o descomponedor, cuenten los cables y apliquen la <b>primera</b> regla que se cumpla.</p>
@@ -778,7 +850,7 @@ function renderManual(){
       <li><b>Diseñador y encargado de materiales:</b> revisan la respuesta y vigilan el Termostato.</li>
     </ul>
     <h3 style="margin:14px 0 6px">Datos de esta bomba</h3>
-    <div class="fill"><div>Número de serie</div><div>Cultivos</div><div>¿Termina en impar? ¿Tiene vocal?</div><div>Errores permitidos</div></div>
+    <div class="fill"><div>Número de serie</div><div>Cultivos (cajas con colonias)</div><div>¿Termina en impar? ¿Tiene vocal?</div><div>Errores permitidos</div></div>
     <div class="mfoot"><span>Hablen claro. Escuchen completo. Nadie explota.</span><span>Página 1 de ${total}</span></div>
   </div></section>
   ${pages.map((p,i)=>`<section class="mpage">
@@ -800,7 +872,12 @@ async function wake(on){ try{ if(on&&'wakeLock' in navigator){ wl=await navigato
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&G&&!G.dead&&!G.over) wake(true); });
 
 // Atajo: P pausa o continúa
-document.addEventListener('keydown',e=>{ if((e.key==='p'||e.key==='P')&&!$('#game').classList.contains('hidden')&&!e.target.matches('input,select')) $('#pauseBtn').click(); });
+document.addEventListener('keydown',e=>{
+  if($('#game').classList.contains('hidden')||e.target.matches('input,select')) return;
+  if(e.key==='p'||e.key==='P') $('#pauseBtn').click();
+  if(e.key==='ArrowLeft'){ e.preventDefault(); $('#rotL').click(); }
+  if(e.key==='ArrowRight'){ e.preventDefault(); $('#rotR').click(); }
+});
 
 // Registro en Google Sheets con cola de pendientes (por si no hay internet)
 const gsUrl=()=>load('biobomba-gsurl','')||CONFIG.urlAppsScript;
